@@ -178,38 +178,39 @@ public class Simplex {
         
         if(a != 0){
         System.out.println("Termino Pivote: "+a+" indice pivote: X"+(pivote+1));
-        d=Double.MAX_VALUE;
+        a=Double.MAX_VALUE;
         //ENCONTRAR RAZON
             for (int i = 1; i < Listfunciones.size(); i++) {
                 if(Listfunciones.get(i).incognitas.get(pivote) >= 0){
                     div = Listfunciones.get(i).terminoIndependiente/Listfunciones.get(i).incognitas.get(pivote);
-                    if(div < d){
-                        d = div;
+                    if(div < a){
+                        a = div;
                         func = i;
                     }
-                }else{
-                    d=0.0;
                 }
             }
             
-            System.out.println("razon de la ecuacion "+func+" es: "+d);
-            
-            //MULTIPLICAR Y ELIMINAR
-            for (int i = 0; i < Listfunciones.size(); i++) {
-                Double terminoPivo = Listfunciones.get(i).incognitas.get(pivote);
-                if(terminoPivo != 0){
-                        for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
-                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)/Math.abs(terminoPivo));
-                        }
-                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente / Math.abs(terminoPivo);
-                        terminoPivot.add(Math.abs(terminoPivo));
-                }else{
-                    terminoPivot.add(1.0);
-                }  
+            System.out.println("razon de la ecuacion "+func+" es: "+a);
+            if(func != 0){
+                //MULTIPLICAR Y ELIMINAR
+                for (int i = 0; i < Listfunciones.size(); i++) {
+                    Double terminoPivo = Listfunciones.get(i).incognitas.get(pivote);
+                    if(terminoPivo != 0){
+                            for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)/Math.abs(terminoPivo));
+                            }
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente / Math.abs(terminoPivo);
+                            terminoPivot.add(Math.abs(terminoPivo));
+                    }else{
+                        terminoPivot.add(1.0);
+                    }  
+                }
+
+                multiplicar(func, pivote);
+                //pivotear2();
+            }else{
+                System.out.println("Programa Terminado - Los valores de las Restricciones son Negativos");
             }
-            
-            multiplicar(func, pivote);
-            //pivotear2();
         }else{
             System.out.println("Programa Termino");
         }
