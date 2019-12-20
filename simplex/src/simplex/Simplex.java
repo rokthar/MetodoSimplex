@@ -16,6 +16,7 @@ public class Simplex {
         
         //LLENADO DE LA FUNCION OBJETIVO
         funciones funcionZ = new funciones();
+        JOptionPane.showMessageDialog(null, "Ingrese la Función Objetivo");
         for (int i = 0; i < numVariables; i++) {
             funcionZ.incognitas.add(Double.parseDouble(JOptionPane.showInputDialog(null, "Introduce el valor de X"+(i+1))));
         }
@@ -27,13 +28,14 @@ public class Simplex {
         int numRest = Integer.parseInt(JOptionPane.showInputDialog(null, "Introduce el numero de restricciones"));
         for (int i = 0; i < numRest; i++) {
             funciones restriccion = new funciones();
+            JOptionPane.showMessageDialog(null, "Ingrese la Ecuación "+(i+1));
             for (int j = 0; j < numVariables; j++) {
                 restriccion.incognitas.add(Double.parseDouble(JOptionPane.showInputDialog(null, "Introduce el valor de X"+(j+1))));
             }
             restriccion.condicion = JOptionPane.showOptionDialog(null, "Seleccione el operador",
                             "Ingresar funcion", JOptionPane.YES_NO_CANCEL_OPTION,
                             JOptionPane.QUESTION_MESSAGE, null, 
-                            new Object[]{"≤", "=", "≥"}, "≤");
+                            new Object[]{"<=", "=", ">="}, "<=");
             restriccion.terminoIndependiente = Double.parseDouble(JOptionPane.showInputDialog(null, "Introduce el valor independiente"));
             Listfunciones.add(restriccion);
         }
@@ -117,6 +119,10 @@ public class Simplex {
                             Listfunciones.get(j).incognitas.add(0.0);
                         }
                     }
+                    for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
+                        Listfunciones.get(i).incognitas.set(j, Listfunciones.get(i).incognitas.get(j)* -1);
+                    }
+                    Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * -1; 
                     break;
                 default:
                     break;
@@ -127,25 +133,42 @@ public class Simplex {
     
     
     public static void presentarTabla(){
-        //RECORRIDO DE LAS RESTRICCIONES       
-        for (int i = 0; i < Listfunciones.size(); i++) {
+        String cad="";
+        for (int i = 0; i < Listfunciones.get(0).incognitas.size(); i++) {
+            cad += "\t X"+(i+1)+" \t|";
+        }
+        cad += "\t B \t|";
+        System.out.println(cad); 
+       //RECORRIDO DE LAS RESTRICCIONES       
+        for (int i = 1; i < Listfunciones.size(); i++) {
             String cadr ="";
             for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
-                cadr += Listfunciones.get(i).incognitas.get(j)+"|\t";
+                Double num = Math.round(Listfunciones.get(i).incognitas.get(j) * 100.0)/100.0;
+                cadr +="\t"+ num+" \t|";
             }
-            cadr += Listfunciones.get(i).terminoIndependiente+"|\t";
+            Double num = Math.round(Listfunciones.get(i).terminoIndependiente * 100.0)/100.0;
+            cadr += "\t"+num+" \t|";
             System.out.println(cadr);
         }
+        cad ="";
+        for (int i = 0; i < Listfunciones.get(0).incognitas.size(); i++) {
+            Double num = Math.round(Listfunciones.get(0).incognitas.get(i) * 100.0)/100.0;
+            cad += "\t"+ num +" \t|";
+        }
+        Double num = Math.round(Listfunciones.get(0).terminoIndependiente * 100.0)/100.0;
+            cad += "\t"+num+" \t|";
+        System.out.println(cad);
     }
     
    
     
     public static void pivotear(){
         terminoPivot.clear();
-        Double a=0d;
-        int pivote = 0;
-        Double div=0d;
-        int func = 0;
+        Double a=0d; //encontrar pivote
+        Double d=0d; //obtener razon
+        int pivote = 0; //indice del pivote
+        Double div=0d; //division
+        int func = 0; //ecuación pivote
         for (int i = 0; i < Listfunciones.get(0).incognitas.size(); i++) {
             if(Listfunciones.get(0).incognitas.get(i) < a){
                 a = Listfunciones.get(0).incognitas.get(i);
@@ -154,20 +177,22 @@ public class Simplex {
         }
         
         if(a != 0){
-        System.out.println("Termino Pivote: "+a+" indice pivote: "+pivote);
-        a=1000d;
+        System.out.println("Termino Pivote: "+a+" indice pivote: X"+(pivote+1));
+        d=Double.MAX_VALUE;
         //ENCONTRAR RAZON
             for (int i = 1; i < Listfunciones.size(); i++) {
                 if(Listfunciones.get(i).incognitas.get(pivote) >= 0){
                     div = Listfunciones.get(i).terminoIndependiente/Listfunciones.get(i).incognitas.get(pivote);
-                    if(div < a){
-                        a = div;
+                    if(div < d){
+                        d = div;
                         func = i;
                     }
+                }else{
+                    d=0.0;
                 }
-
             }
-            System.out.println("razon de la ecuacion "+func+" es: "+a);
+            
+            System.out.println("razon de la ecuacion "+func+" es: "+d);
             
             //MULTIPLICAR Y ELIMINAR
             for (int i = 0; i < Listfunciones.size(); i++) {
@@ -195,24 +220,65 @@ public class Simplex {
         for (int i = 0; i < Listfunciones.size(); i++) {            
             if(Listfunciones.get(i).incognitas.get(pivote) != 0){
                 if(Listfunciones.get(i).incognitas.get(pivote) > 0){
-                    if(i != func){
-                        for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
-                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)+(Listfunciones.get(func).incognitas.get(j) * -1));
-                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)* terminoPivot.get(i));
+                    if(Listfunciones.get(func).incognitas.get(pivote) > 0){
+                        if(i != func){
+                            for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)+(Listfunciones.get(func).incognitas.get(j) * -1));
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)* terminoPivot.get(i));
+                            }
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente + (Listfunciones.get(func).terminoIndependiente * -1) ;
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * terminoPivot.get(i);
                         }
-                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente + (Listfunciones.get(func).terminoIndependiente * -1) ;
-                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * terminoPivot.get(i);
+                    }else{
+                        if(i != func){
+                            for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)+(Listfunciones.get(func).incognitas.get(j)));
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)* terminoPivot.get(i));
+                            }
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente + (Listfunciones.get(func).terminoIndependiente) ;
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * terminoPivot.get(i);
+                        }
                     }
                 }else{
-                    if(i != func){
-                        for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
-                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)+(Listfunciones.get(func).incognitas.get(j)));
-                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)* terminoPivot.get(i));
+                     if(Listfunciones.get(func).incognitas.get(pivote) > 0){
+                         if(i != func){
+                            for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)+(Listfunciones.get(func).incognitas.get(j)));
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)* terminoPivot.get(i));
+                            }
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente + (Listfunciones.get(func).terminoIndependiente) ;
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * terminoPivot.get(i);
                         }
-                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente + (Listfunciones.get(func).terminoIndependiente) ;
-                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * terminoPivot.get(i);
-                    }
+                     }else{
+                         if(i != func){
+                            for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)+(Listfunciones.get(func).incognitas.get(j) * -1));
+                                Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)* terminoPivot.get(i));
+                            }
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente + (Listfunciones.get(func).terminoIndependiente * -1) ;
+                            Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * terminoPivot.get(i);
+                        }
+                     }
                 }
+//                if(Listfunciones.get(i).incognitas.get(pivote) > 0){
+//                    if(i != func){
+//                        for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
+//                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)+(Listfunciones.get(func).incognitas.get(j) * -1));
+//                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)* terminoPivot.get(i));
+//                        }
+//                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente + (Listfunciones.get(func).terminoIndependiente * -1) ;
+//                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * terminoPivot.get(i);
+//                    }
+//                }else{
+//                    if(i != func){
+//                        for (int j = 0; j < Listfunciones.get(i).incognitas.size(); j++) {
+//                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)+(Listfunciones.get(func).incognitas.get(j)));
+//                            Listfunciones.get(i).incognitas.set(j,Listfunciones.get(i).incognitas.get(j)* terminoPivot.get(i));
+//                        }
+//                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente + (Listfunciones.get(func).terminoIndependiente) ;
+//                        Listfunciones.get(i).terminoIndependiente = Listfunciones.get(i).terminoIndependiente * terminoPivot.get(i);
+//                    }
+//                }
             }
         }
         presentarTabla();
